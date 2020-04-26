@@ -9,7 +9,7 @@ Raw_PPR_Sample <- Raw_PPR_Sample[1:62312, ]
 colnames(Geocoded_Sample)[9] <- 'Address'
 
 #Remove Ireland From the Geocoded Input Address,
-#This was Added to Improve Accuarcy in Geocoding.
+#This was Added to Improve Accuarcy in Geocoding and Prevents us from merging.
 Geocoded_Sample$Address <- as.character(Geocoded_Sample$Address)
 Geocoded_Sample$Address <- substring(Geocoded_Sample$Address,1,nchar(Geocoded_Sample$Address) -9)
 
