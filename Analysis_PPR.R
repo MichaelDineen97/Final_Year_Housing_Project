@@ -5,6 +5,7 @@ install.packages('ggplot2')
 install.packages('dplyr')
 install.packages('plotly')
 install.packages('scales')
+install.packages("safejoin")
 library(scales)
 library(dplyr)
 library(plotly)
@@ -13,7 +14,9 @@ library(hrbrthemes)
 library(tidyverse)
 library(leaflet)
 library(haven)
+library(safejoin)
 
+setwd("/Users/mickdineen97/Desktop/Thesis Related/Final_Year_Housing_Project")
 #---------Initial Import,Merge and Seperate of Data----------------
 
 #****Using Excel, All values over €1 Million was Removed from Property Price Register
@@ -27,6 +30,29 @@ Census_Data <- merge(SA1, SA2, by ="GUID")
 write.csv(file="Census_Data.csv", Census_Data)
 rm(SA1,SA2)
 
+#Mortgage and Loan Data creation
+Census_Data$WithMortage <- Census_Data$T6_3_OMLH #Amount of People with Mortages 
+Census_Data$FullyOwn <- Census_Data$T6_3_OOH #Amount of People with Mortages
+
+Prop_1<- data_frame(Census_Data$WithMortage,Census_Data$COUNTYNAME,) 
+Prop_2<- data.frame(Census_Data$FullyOwn,Census_Data$COUNTYNAME) 
+
+Prop_1$County <- Prop_1$`Census_Data$COUNTYNAME`
+Prop_2$County <- Prop_2$Census_Data.COUNTYNAME
+Prop_1$Mortgage <- Prop_1$`Census_Data$WithMortage`
+Prop_2$Own <- Prop_2$Census_Data.FullyOwn
+
+# combine two dataset
+Overview_Property <-cbind(Prop_1, Prop_2)
+#Removal of Duplicates
+Overview_Property$`Census_Data$COUNTYNAME`<-  NULL
+Overview_Property$Census_Data.COUNTYNAME <- NULL
+Overview_Property$`Census_Data$WithMortage` <- NULL 
+Overview_Property$Census_Data.FullyOwn <-NULL
+Overview_Property$County <- NULL
+
+#Output File For Tableau
+write.csv(file="Mortgage_Data.csv",Overview_Property, row.names = F)
 #Population Census
 Pop_Data <- read_excel("/Users/mickdineen97/Desktop/Thesis Related/Final_Year_Housing_Project/Last10.xlsx")
 Population_Change <- read_excel("Population_Change.xlsx")
@@ -46,7 +72,7 @@ PPR_Full_DataSet <- PPR_Full_DataSet %>%
 
 #Import New PPR
 Geocoded_PPR <- read.csv("/Users/mickdineen97/Desktop/Thesis Related/Final_Year_Housing_Project/Geocoded_PPR.csv")
-rm(Geocoded_PPR)
+
 #Seperate Date into Year, Month, and Day 
 Geocoded_PPR <- Geocoded_PPR %>%
 separate(Date.of.Sale..dd.mm.yyyy., sep="/", into = c("day", "month", "year"))
@@ -63,6 +89,7 @@ separate(Date.of.Sale..dd.mm.yyyy., sep="/", into = c("day", "month", "year"))
 #The outliers were removed 
 #Reimport
 Geocoded_PPR <- read.csv("/Users/mickdineen97/Desktop/Thesis Related/Final_Year_Housing_Project/Geocoded_23420.csv")
+
 #---------------------All Ireland Analysis- Pre-Geocoded Data --------------------
 summary(Geocoded_PPR$Price)
 
@@ -96,8 +123,10 @@ par(bg="light yellow")
 barplot(Pop_Data$Dublin ~ Pop_Data$Year, col="blue", main="Dublin's increasing population",xlab="Year", ylab="Population")
 
 #-------------------------Correlation- Average Price ~ Population Density-------------------------------
+
 Corr_Den_Price <- read_sav("~/Desktop/DensityvsPrice.sav")
-#Correlation Model - A
+
+#Correlation Model - 
 cor(Corr_Den_Price$Avg_House_Price, Corr_Den_Price$Population_Density) #0.72
 
 #Plot Correlation
@@ -138,11 +167,12 @@ ggplot(Geocoded_PPR, aes(month, colour = Description.of.Property)) +
 
 #------Statistical Tests------
 
+#Conducted In SPSS and import here 
 NewOld_Price <- read.csv("/Users/mickdineen97/Desktop/FYP_Data/StatTest1.csv")
 boxplot(NewOld_Price$Price ~ NewOld_Price$Description.of.Property, col=rainbow(2), main="Price of New vs Second hand Prices", xlab = "Type", ylab = "Price", ylim=c(0,1000000))
 rm(NewOld_Price)
 
 
 
-       
-
+ggplot(PPR_train, aes(year, colour = Description.of.Property)) +
+  geom_freqpoly(binwidth = 1) + labs(title="Time Series Analysis: Difference in Count of Property type")
